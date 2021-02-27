@@ -1,28 +1,38 @@
 package com.example.geovalla
 
 import android.Manifest
+import android.app.PendingIntent
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
 import com.example.geovalla.databinding.ActivityMapsBinding
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.location.*
+import com.google.android.gms.maps.model.*
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var lastLocation: Location
+
+
+    //
+
+    lateinit var geofencingClient: GeofencingClient
+
+
+    //
+
+    val latLng = LatLng(20.687610,-103.323364)
 
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
@@ -32,6 +42,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+                //
+        geofencingClient = LocationServices.getGeofencingClient(this)
+        //
 
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -41,6 +54,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        //
+
+        //
     }
 
     /**
@@ -64,6 +81,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         mMap.setOnMarkerClickListener(this)
         mMap.uiSettings.isZoomControlsEnabled=true
         setUpMap()
+        addCircle(mMap)
+        //
+        val geo = Geofence.Builder()
+        geo.setRequestId("1")
+
+        geo.setCircularRegion(20.687610,-103.323364, 1000F)
+        geo.setExpirationDuration(999999999999L)
+        geo.setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT)
+        geo.build()
+
+        //
 
     }
 
@@ -111,4 +139,27 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         TODO("Not yet implemented")
         false
     }
+
+
+    private var circle: Circle? = null
+    private fun addCircle(googleMap: GoogleMap) {
+        circle?.remove()
+        circle = googleMap.addCircle(
+            CircleOptions()
+                .center(latLng)
+                .radius(1000.0)
+                .fillColor(ContextCompat.getColor(this, R.color.common_google_signin_btn_text_light_disabled))
+                .strokeColor(ContextCompat.getColor(this, R.color.common_google_signin_btn_text_light_disabled))
+        )
+    }
+
+
+    //
+    private fun getGeofencingRequest(): GeofencingRequest {
+        return GeofencingRequest.Builder().apply {
+            setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+        }.build()
+    }
+
+    //
 }
