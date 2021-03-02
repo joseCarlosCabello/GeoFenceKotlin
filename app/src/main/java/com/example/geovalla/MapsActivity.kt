@@ -1,13 +1,20 @@
 package com.example.geovalla
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.Location
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -23,6 +30,30 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var lastLocation: Location
+
+
+    //
+    private val channelID= "channelID"
+    private val channelName= "channelName"
+    private val notificationID =0
+
+    //
+
+/*
+
+
+    val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
+    val builder = NotificationCompat.Builder(this, "not")
+    .setSmallIcon(R.drawable.googleg_disabled_color_18)
+    .setContentTitle("My notification")
+    .setContentText("Hello World!")
+    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+    // Set the intent that will fire when the user taps the notification
+    .setContentIntent(pendingIntent)
+    .setAutoCancel(true)
+
+    */
+
 
 
     //
@@ -55,9 +86,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         mapFragment.getMapAsync(this)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        //
 
-        //
     }
 
     /**
@@ -71,6 +100,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
      */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+
+        //
+        val notification = NotificationCompat.Builder(this,channelID).also {
+            it.setContentTitle("hola")
+            it.setContentText("mundo")
+            it.setSmallIcon(R.drawable.ic_message)
+            it.setPriority(NotificationCompat.PRIORITY_HIGH)
+
+        }.build()
+
+
+        val notificationManager = NotificationManagerCompat.from(this)
+
+
+        //
 
        /* // Add a marker in Sydney and move the camera
         val sydney = LatLng(-34.0, 151.0)
@@ -87,9 +131,29 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         geo.setRequestId("1")
 
         geo.setCircularRegion(20.687610,-103.323364, 1000F)
-        geo.setExpirationDuration(999999999999L)
+        geo.setExpirationDuration(Geofence.NEVER_EXPIRE)
         geo.setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT)
         geo.build()
+        if(Geofence.GEOFENCE_TRANSITION_ENTER==1)
+        {
+            notificationManager.notify(notificationID,notification)
+        }
+       /* with(NotificationManagerCompat.from(this)) {
+            // notificationId is a unique int for each notification that you must define
+            notify(1, builder.build())
+        }*/
+
+
+       /* geofencingClient?.addGeofences(getGeofencingRequest(), geofencePendingIntent)?.run {
+            addOnSuccessListener {
+                // Geofences added
+                // ...
+            }
+            addOnFailureListener {
+                // Failed to add geofences
+                // ...
+            }
+        }*/
 
         //
 
@@ -160,6 +224,38 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
         }.build()
     }
+
+    /*
+
+    private val geofencePendingIntent: PendingIntent by lazy {
+        val intent = Intent(this, MyReceiver::class.java)
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
+        // addGeofences() and removeGeofences().
+        PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+    }
+
+    */
+
+//crear canal
+   private fun createNotificationChannel()
+   {
+       if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+       {
+           val importance: Int = NotificationManager.IMPORTANCE_HIGH
+
+           val channel=NotificationChannel(channelID,channelName,importance).apply {
+               lightColor = Color.RED
+               enableLights(true)
+           }
+           val manager: NotificationManager =getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+           manager.createNotificationChannel(channel)
+       }
+
+
+    }
+
 
     //
 }
